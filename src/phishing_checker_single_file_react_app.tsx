@@ -8,14 +8,17 @@ import {
   ChevronRight,
   ClipboardCopy,
   Download,
+  FileText,
   Info,
   Link2,
   ListFilter,
+  Plus,
   RotateCw,
   ScanSearch,
   Settings2,
   ShieldAlert,
   ShieldCheck,
+  Trash2,
   Upload,
   X
 } from "lucide-react";
@@ -142,6 +145,7 @@ export default function App() {
     const raw = localStorage.getItem("pc_weights");
     return raw ? JSON.parse(raw) : defaultWeights;
   });
+  const resetWeights = () => setWeights(defaultWeights);
   const [whitelist, setWhitelist] = useState<Set<string>>(()=>loadSet("pc_whitelist"));
   const [blacklist, setBlacklist] = useState<Set<string>>(()=>loadSet("pc_blacklist"));
   const [filter, setFilter] = useState<'all'|'trusted'|'mal'|'risky'|'clean'>("all");
@@ -200,6 +204,14 @@ export default function App() {
   }, [textFlags, urlAnalyses, weights]);
 
   const risk = useMemo(()=>riskLabel(totalScore), [totalScore]);
+
+  const counts = useMemo(()=>({
+    trusted: urlAnalyses.filter(u=>u.category==='trusted').length,
+    malicious: urlAnalyses.filter(u=>u.category==='malicious').length,
+    risky: urlAnalyses.filter(u=>u.category==='risky').length,
+    ok: urlAnalyses.filter(u=>u.category==='ok').length,
+    all: urlAnalyses.length
+  }), [urlAnalyses]);
 
   const filtered = useMemo(()=>{
     if (filter==='all') return urlAnalyses;
@@ -344,6 +356,9 @@ export default function App() {
                     </div>
                   ))}
                 </div>
+                <div className="mt-3 flex items-center gap-2">
+                  <button onClick={resetWeights} className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 inline-flex items-center gap-2"><RotateCw className="w-4 h-4"/> รีเซ็ตน้ำหนัก</button>
+                </div>
               </details>
 
               <div className="text-xs text-slate-400 flex items-start gap-2"><Info className="w-4 h-4 mt-0.5"/> การวิเคราะห์นี้ทำแบบออฟไลน์ ไม่ดึงข้อมูล WHOIS/DNS จริง ผลลัพธ์เป็นการประเมินเบื้องต้น</div>
@@ -355,11 +370,11 @@ export default function App() {
         <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
           <div className="inline-flex items-center gap-2">
             <ListFilter className="w-4 h-4"/>
-            <button className={`px-3 py-1.5 rounded-xl border ${filter==='all'?'bg-slate-800 text-white border-slate-700':'bg-slate-900 border-slate-800'}`} onClick={()=>setFilter('all')}>ทั้งหมด</button>
-            <button className={`px-3 py-1.5 rounded-xl border ${filter==='trusted'?'bg-slate-800 text-white border-slate-700':'bg-slate-900 border-slate-800'}`} onClick={()=>setFilter('trusted')}>จริง (Whitelist)</button>
-            <button className={`px-3 py-1.5 rounded-xl border ${filter==='mal'?'bg-slate-800 text-white border-slate-700':'bg-slate-900 border-slate-800'}`} onClick={()=>setFilter('mal')}>ปลอม/อันตราย</button>
-            <button className={`px-3 py-1.5 rounded-xl border ${filter==='risky'?'bg-slate-800 text-white border-slate-700':'bg-slate-900 border-slate-800'}`} onClick={()=>setFilter('risky')}>เสี่ยง</button>
-            <button className={`px-3 py-1.5 rounded-xl border ${filter==='clean'?'bg-slate-800 text-white border-slate-700':'bg-slate-900 border-slate-800'}`} onClick={()=>setFilter('clean')}>ไม่เสี่ยง</button>
+            <button className={`px-3 py-1.5 rounded-xl border ${filter==='all'?'bg-slate-800 text-white border-slate-700':'bg-slate-900 border-slate-800'}`} onClick={()=>setFilter('all')}>ทั้งหมด <span className="ml-1 text-xs opacity-70">{counts.all}</span></button>
+            <button className={`px-3 py-1.5 rounded-xl border ${filter==='trusted'?'bg-slate-800 text-white border-slate-700':'bg-slate-900 border-slate-800'}`} onClick={()=>setFilter('trusted')}>จริง (Whitelist) <span className="ml-1 text-xs opacity-70">{counts.trusted}</span></button>
+            <button className={`px-3 py-1.5 rounded-xl border ${filter==='mal'?'bg-slate-800 text-white border-slate-700':'bg-slate-900 border-slate-800'}`} onClick={()=>setFilter('mal')}>ปลอม/อันตราย <span className="ml-1 text-xs opacity-70">{counts.malicious}</span></button>
+            <button className={`px-3 py-1.5 rounded-xl border ${filter==='risky'?'bg-slate-800 text-white border-slate-700':'bg-slate-900 border-slate-800'}`} onClick={()=>setFilter('risky')}>เสี่ยง <span className="ml-1 text-xs opacity-70">{counts.risky}</span></button>
+            <button className={`px-3 py-1.5 rounded-xl border ${filter==='clean'?'bg-slate-800 text-white border-slate-700':'bg-slate-900 border-slate-800'}`} onClick={()=>setFilter('clean')}>ไม่เสี่ยง <span className="ml-1 text-xs opacity-70">{counts.ok}</span></button>
           </div>
           <div className="flex flex-wrap gap-2 text-sm">
             <button onClick={()=>autoAddFromSelection('white')} className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 inline-flex items-center gap-2"><Check className="w-4 h-4"/> เพิ่มโดเมนทั้งหมดเข้าขาว</button>
